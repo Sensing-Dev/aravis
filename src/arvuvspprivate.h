@@ -47,6 +47,16 @@ typedef enum {
 	ARV_UVSP_PACKET_TYPE_DATA
 } ArvUvspPacketType;
 
+// u3v 1.2 5.5.5 Payload Types
+typedef enum {
+	ARV_UVSP_PAYLOAD_TYPE_UNKNOWN = 		        0x0000,
+	ARV_UVSP_PAYLOAD_TYPE_IMAGE = 			        0x0001,
+	ARV_UVSP_PAYLOAD_TYPE_IMAGE_EXTENDED_CHUNK =	0x4001,
+	ARV_UVSP_PAYLOAD_TYPE_CHUNK = 			        0x4000,
+	ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER = 	    0x1001,
+	ARV_UVSP_PAYLOAD_TYPE_GENDC_COMPONENT_DATA = 	0x1002
+} ArvUvspPayloadType;
+
 #pragma pack(push,1)
 
 typedef struct {
@@ -122,6 +132,10 @@ arv_uvsp_packet_get_buffer_payload_type (ArvUvspPacket *packet, gboolean *has_ch
 
         if (has_chunks != NULL)
                 *has_chunks = (payload_type & 0x4000) != 0;
+
+	if (payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
+		return ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER;
+	}
 
         return payload_type & 0x3fff;
 }

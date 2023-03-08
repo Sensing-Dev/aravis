@@ -140,6 +140,7 @@ arv_uv_stream_buffer_context_notify_transfer_completed (ArvUvStreamBufferContext
 static
 void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 {
+    printf("arv_uv_stream_leader_cb\n");
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
 
@@ -158,8 +159,8 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                 }
 
                                 ctx->buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
-                                ctx->buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type
-                                        (packet, &ctx->buffer->priv->has_chunks);
+                                ctx->buffer->priv->payload_type 
+                                    = arv_uvsp_packet_get_buffer_payload_type(packet, &ctx->buffer->priv->has_chunks);
                                 ctx->buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
                                 if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                                     ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
@@ -175,6 +176,13 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                                                     &ctx->buffer->priv->parts[0].y_offset,
                                                                     &ctx->buffer->priv->parts[0].x_padding,
                                                                     &ctx->buffer->priv->parts[0].y_padding);
+                                }else if(ctx->buffer->priv->payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
+                                    int component_count = 0;
+                                    memcpy (((char *) ctx->buffer->priv->data), &component_count, 4);
+                                    printf(component_count);
+                                    // if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
+
+                                    // }
                                 }
                                 ctx->buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
@@ -286,6 +294,7 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 static ArvUvStreamBufferContext*
 arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thread_data, gint *total_submitted_bytes)
 {
+    printf("arv_uv_stream_buffer_context_new\n");
 	ArvUvStreamBufferContext* ctx = g_malloc0 (sizeof(ArvUvStreamBufferContext));
 	int i;
 	size_t offset = 0;
@@ -570,99 +579,116 @@ arv_uv_stream_thread_sync (void *data)
 					if (buffer != NULL) {
 						buffer->priv->system_timestamp_ns = g_get_real_time () * 1000LL;
 						buffer->priv->status = ARV_BUFFER_STATUS_FILLING;
-                                                buffer->priv->received_size = 0;
+                        buffer->priv->received_size = 0;
 						buffer->priv->payload_type = arv_uvsp_packet_get_buffer_payload_type
                                                         (packet, &buffer->priv->has_chunks);
 						buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
 						if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
 						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
-                                                        arv_buffer_set_n_parts(buffer, 1);
-                                                        buffer->priv->parts[0].data_offset = 0;
-                                                        buffer->priv->parts[0].component_id = 0;
-                                                        buffer->priv->parts[0].data_type =
-                                                                ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
-							buffer->priv->parts[0].pixel_format =
-                                                                arv_uvsp_packet_get_pixel_format (packet);
+							arv_buffer_set_n_parts(buffer, 1);
+							buffer->priv->parts[0].data_offset = 0;
+							buffer->priv->parts[0].component_id = 0;
+							buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+							buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_pixel_format (packet);
 							arv_uvsp_packet_get_region (packet,
-										    &buffer->priv->parts[0].width,
-										    &buffer->priv->parts[0].height,
-										    &buffer->priv->parts[0].x_offset,
-										    &buffer->priv->parts[0].y_offset,
-                                                                                    &buffer->priv->parts[0].x_padding,
-                                                                                    &buffer->priv->parts[0].y_padding);
+								&buffer->priv->parts[0].width,
+								&buffer->priv->parts[0].height,
+								&buffer->priv->parts[0].x_offset,
+								&buffer->priv->parts[0].y_offset,
+								&buffer->priv->parts[0].x_padding,
+								&buffer->priv->parts[0].y_padding);
 						}
 						buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
 						buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
 						offset = 0;
+
 						if (thread_data->callback != NULL)
 							thread_data->callback (thread_data->callback_data,
 									       ARV_STREAM_CALLBACK_TYPE_START_BUFFER,
 									       NULL);
-                                                thread_data->statistics.n_transferred_bytes += transferred;
-                                        } else {
-                                                thread_data->statistics.n_underruns++;
-                                                thread_data->statistics.n_ignored_bytes += transferred;
-                                        }
+
+						thread_data->statistics.n_transferred_bytes += transferred;
+
+					} else {
+						thread_data->statistics.n_underruns++;
+						thread_data->statistics.n_ignored_bytes += transferred;
+					}
                                         break;
 				case ARV_UVSP_PACKET_TYPE_TRAILER:
 					if (buffer != NULL) {
 						arv_debug_stream_thread ("Received %" G_GUINT64_FORMAT " bytes",
 								       offset);
 
-                                                if (offset != thread_data->expected_size) {
-                                                        arv_info_stream_thread ("Incomplete image received, dropping "
-                                                                                "(received %" G_GUINT64_FORMAT
-                                                                                " / expected %" G_GSIZE_FORMAT ")",
-                                                                                offset, thread_data->expected_size);
+                            if (offset != thread_data->expected_size) {
+                                    arv_info_stream_thread ("Incomplete image received, dropping "
+                                                            "(received %" G_GUINT64_FORMAT
+                                                            " / expected %" G_GSIZE_FORMAT ")",
+                                                            offset, thread_data->expected_size);
 
-                                                       buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-                                                       arv_stream_push_output_buffer (thread_data->stream, buffer);
-                                                       if (thread_data->callback != NULL)
-                                                               thread_data->callback (thread_data->callback_data,
-                                                                                      ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-                                                                                      buffer);
-                                                       thread_data->statistics.n_failures++;
-                                                       thread_data->statistics.n_ignored_bytes += transferred;
-                                                       buffer = NULL;
-                                                } else {
-                                                        buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-                                                        buffer->priv->received_size = offset;
-                                                        buffer->priv->parts[0].size = offset;
-                                                        arv_stream_push_output_buffer (thread_data->stream, buffer);
-                                                        if (thread_data->callback != NULL)
-                                                                thread_data->callback (thread_data->callback_data,
-                                                                                       ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
-                                                                                       buffer);
-                                                        thread_data->statistics.n_completed_buffers++;
-                                                        thread_data->statistics.n_transferred_bytes += transferred;
-                                                        buffer = NULL;
-                                                }
-                                        }
-                                        break;
-                                case ARV_UVSP_PACKET_TYPE_DATA:
-                                        if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
-                                                if (offset + transferred <= buffer->priv->allocated_size) {
-                                                        if (packet == incoming_buffer)
-                                                                memcpy (((char *) buffer->priv->data) + offset,
-                                                                        packet, transferred);
-                                                        offset += transferred;
-                                                        thread_data->statistics.n_transferred_bytes += transferred;
-                                                } else {
-                                                        buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
-                                                        thread_data->statistics.n_ignored_bytes += transferred;
-                                                }
-                                        } else {
-                                                thread_data->statistics.n_ignored_bytes += transferred;
-                                        }
-                                        break;
+                                    buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+                                    arv_stream_push_output_buffer (thread_data->stream, buffer);
+                                    if (thread_data->callback != NULL)
+                                            thread_data->callback (thread_data->callback_data,
+                                                                    ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                                                    buffer);
+                                    thread_data->statistics.n_failures++;
+                                    thread_data->statistics.n_ignored_bytes += transferred;
+                                    buffer = NULL;
+                            } else {
+                                    buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
+                                    buffer->priv->received_size = offset;
+                                    buffer->priv->parts[0].size = offset;
+                                    arv_stream_push_output_buffer (thread_data->stream, buffer);
+                                    if (thread_data->callback != NULL)
+                                            thread_data->callback (thread_data->callback_data,
+                                                                    ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE,
+                                                                    buffer);
+                                    thread_data->statistics.n_completed_buffers++;
+                                    thread_data->statistics.n_transferred_bytes += transferred;
+                                    buffer = NULL;
+                            }
+                    }
+                    break;
+                case ARV_UVSP_PACKET_TYPE_DATA:
+                    if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
+                        if (offset + transferred <= buffer->priv->allocated_size) {
+                            if (packet == incoming_buffer)
+                                    memcpy (((char *) buffer->priv->data) + offset,
+                                            packet, transferred);
+                            offset += transferred;
+                            thread_data->statistics.n_transferred_bytes += transferred;
+                            if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
+                                if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
+                                    int component_count = 0;
+                                    memcpy (&component_count, ((char *) buffer->priv->data + 52), 4);
+
+                                    int component_offset = 56;
+                                    for(int ith_component = 0; ith_component < component_count; ++ith_component){
+                                        char valid = 0;
+                                        memcpy (&valid, ((char *) buffer->priv->data + component_offset + 2), 1);
+                                        printf("This is valid %c\n", valid);
+                                    }
+                                }
+                            }else{
+                                arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s", buffer->priv->data);
+                            }
+                        } else {
+                                buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
+                                thread_data->statistics.n_ignored_bytes += transferred;
+                        }
+                    } else {
+                            thread_data->statistics.n_ignored_bytes += transferred;
+                    }
+                    printf(" -> ");
+                    break;
                                 default:
                                         arv_info_stream_thread ("Unknown packet type");
                                         break;
-                        }
-                }
+            }
         }
+    } //end of while loop
 
-        if (buffer != NULL) {
+    if (buffer != NULL) {
 		buffer->priv->status = ARV_BUFFER_STATUS_ABORTED;
                 thread_data->statistics.n_aborted++;
 		arv_stream_push_output_buffer (thread_data->stream, buffer);
