@@ -39,6 +39,17 @@
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0')
+
 enum {
        ARV_UV_STREAM_PROPERTY_0,
        ARV_UV_STREAM_PROPERTY_USB_MODE
@@ -653,10 +664,10 @@ arv_uv_stream_thread_sync (void *data)
                     if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
                         if (offset + transferred <= buffer->priv->allocated_size) {
                             if (packet == incoming_buffer)
-                                    memcpy (((char *) buffer->priv->data) + offset,
-                                            packet, transferred);
+                                    memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
                             offset += transferred;
                             thread_data->statistics.n_transferred_bytes += transferred;
+
                             if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
                                 if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
                                     int component_count = 0;
@@ -664,13 +675,49 @@ arv_uv_stream_thread_sync (void *data)
 
                                     int component_offset = 56;
                                     for(int ith_component = 0; ith_component < component_count; ++ith_component){
-                                        char valid = 0;
-                                        memcpy (&valid, ((char *) buffer->priv->data + component_offset + 2), 1);
-                                        printf("This is valid %c\n", valid);
+                                        char invalid = 0;
+										int64_t ith_component_offset = 0;
+										memcpy (&ith_component_offset, 
+											((char *) buffer->priv->data + component_offset + 8 * ith_component), 8);
+                                        memcpy (&invalid, ((char *) buffer->priv->data + ith_component_offset + 2), 1);
+                                        if (invalid == 0){ // if container is valid
+											int64_t typeid = 0;
+											memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 32), 8);
+											if (typeid == 0x1){
+												// Let PartCount is 1 for now
+												int64_t partoffset = 0;
+												memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 48), 8);
+
+												int64_t dataoffset = 0;
+												memcpy (&dataoffset, ((char *) buffer->priv->data + partoffset + 32), 8);
+
+
+												arv_buffer_set_n_parts(buffer, 1);
+												buffer->priv->parts[0].data_offset = dataoffset;
+												buffer->priv->parts[0].component_id = 0;
+												buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+												memcpy (&(buffer->priv->parts[0].pixel_format), 
+													((char *) buffer->priv->data + ith_component_offset + 40), 4);
+												memcpy (&(buffer->priv->parts[0].width), 
+													((char *) buffer->priv->data + partoffset + 40), 4);
+												memcpy (&(buffer->priv->parts[0].height), 
+													((char *) buffer->priv->data + partoffset + 44), 4);
+												buffer->priv->parts[0].x_offset = 0;
+												buffer->priv->parts[0].y_offset = 0;
+												int16_t padding = 0;
+												memcpy (padding, 
+													((char *) buffer->priv->data + partoffset + 48), 2);
+												buffer->priv->parts[0].x_padding = (int)padding;
+												memcpy (padding, 
+													((char *) buffer->priv->data + partoffset + 52), 2);
+												buffer->priv->parts[0].y_padding = (int)padding;
+													
+											}
+										}
                                     }
-                                }
-                            }else{
-                                arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s", buffer->priv->data);
+                                }else{
+									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s", buffer->priv->data);
+								}
                             }
                         } else {
                                 buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
@@ -679,7 +726,6 @@ arv_uv_stream_thread_sync (void *data)
                     } else {
                             thread_data->statistics.n_ignored_bytes += transferred;
                     }
-                    printf(" -> ");
                     break;
                                 default:
                                         arv_info_stream_thread ("Unknown packet type");
