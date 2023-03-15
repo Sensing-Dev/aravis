@@ -107,6 +107,7 @@ void 			arv_uvsp_packet_debug 			(const ArvUvspPacket *packet, ArvDebugLevel lev
 static inline ArvUvspPacketType
 arv_uvsp_packet_get_packet_type	(const ArvUvspPacket *packet)
 {
+	printf("%i\n", packet->header.magic);
 	if (packet == NULL)
 		return ARV_UVSP_PACKET_TYPE_UNKNOWN;
 	else if (GUINT32_FROM_LE (packet->header.magic) == ARV_UVSP_LEADER_MAGIC)

@@ -723,7 +723,7 @@ arv_camera_get_pixel_format (ArvCamera *camera, GError **error)
 const char *
 arv_camera_get_pixel_format_as_string (ArvCamera *camera, GError **error)
 {
-	return arv_camera_get_string (camera, "PixelFormat", error);
+	return "Mono8";//arv_camera_get_string (camera, "PixelFormat", error);
 }
 
 /**

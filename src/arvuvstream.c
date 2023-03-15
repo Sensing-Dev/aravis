@@ -668,29 +668,30 @@ arv_uv_stream_thread_sync (void *data)
                             offset += transferred;
                             thread_data->statistics.n_transferred_bytes += transferred;
 
+							// GENDC =========================================================================
                             if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
-                                if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
+                                if(strncmp(buffer->priv->data, "GNDC", 4) != 0){
+									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GENDC", buffer->priv->data);
+								}else{
                                     int component_count = 0;
                                     memcpy (&component_count, ((char *) buffer->priv->data + 52), 4);
 
-                                    int component_offset = 56;
                                     for(int ith_component = 0; ith_component < component_count; ++ith_component){
                                         char invalid = 0;
 										int64_t ith_component_offset = 0;
 										memcpy (&ith_component_offset, 
-											((char *) buffer->priv->data + component_offset + 8 * ith_component), 8);
+											((char *) buffer->priv->data + 56 + 8 * ith_component), 8);
                                         memcpy (&invalid, ((char *) buffer->priv->data + ith_component_offset + 2), 1);
                                         if (invalid == 0){ // if container is valid
 											int64_t typeid = 0;
 											memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 32), 8);
-											if (typeid == 0x1){
+											if (typeid == 0x1){ // if the container has image
 												// Let PartCount is 1 for now
 												int64_t partoffset = 0;
 												memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 48), 8);
 
 												int64_t dataoffset = 0;
 												memcpy (&dataoffset, ((char *) buffer->priv->data + partoffset + 32), 8);
-
 
 												arv_buffer_set_n_parts(buffer, 1);
 												buffer->priv->parts[0].data_offset = dataoffset;
@@ -715,10 +716,9 @@ arv_uv_stream_thread_sync (void *data)
 											}
 										}
                                     }
-                                }else{
-									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s", buffer->priv->data);
-								}
+                                }
                             }
+							// GENDC =========================================================================
                         } else {
                                 buffer->priv->status = ARV_BUFFER_STATUS_SIZE_MISMATCH;
                                 thread_data->statistics.n_ignored_bytes += transferred;
