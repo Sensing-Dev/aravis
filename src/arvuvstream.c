@@ -188,9 +188,9 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                                                     &ctx->buffer->priv->parts[0].x_padding,
                                                                     &ctx->buffer->priv->parts[0].y_padding);
                                 }else if(ctx->buffer->priv->payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
-                                    int component_count = 0;
-                                    memcpy (((char *) ctx->buffer->priv->data), &component_count, 4);
-                                    printf(component_count);
+                                    // int component_count = 0;
+                                    // memcpy (((char *) ctx->buffer->priv->data), &component_count, 4);
+                                    // printf(component_count);
                                     // if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
 
                                     // }
@@ -595,7 +595,8 @@ arv_uv_stream_thread_sync (void *data)
                                                         (packet, &buffer->priv->has_chunks);
 						buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
 						if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+						    buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+							buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER) {
 							arv_buffer_set_n_parts(buffer, 1);
 							buffer->priv->parts[0].data_offset = 0;
 							buffer->priv->parts[0].component_id = 0;
@@ -682,18 +683,18 @@ arv_uv_stream_thread_sync (void *data)
 										memcpy (&ith_component_offset, 
 											((char *) buffer->priv->data + 56 + 8 * ith_component), 8);
                                         memcpy (&invalid, ((char *) buffer->priv->data + ith_component_offset + 2), 1);
-                                        if (invalid == 0){ // if container is valid
+                                        // printf("%i(%jd) : "BYTE_TO_BINARY_PATTERN"\n", ith_component, ith_component_offset, BYTE_TO_BINARY(invalid));
+										if (invalid == 0){ // if container is valid
 											int64_t typeid = 0;
 											memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 32), 8);
 											if (typeid == 0x1){ // if the container has image
 												// Let PartCount is 1 for now
 												int64_t partoffset = 0;
-												memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 48), 8);
+												memcpy (&partoffset, ((char *) buffer->priv->data + ith_component_offset + 48), 8);
 
 												int64_t dataoffset = 0;
 												memcpy (&dataoffset, ((char *) buffer->priv->data + partoffset + 32), 8);
-
-												arv_buffer_set_n_parts(buffer, 1);
+												// arv_buffer_set_n_parts(buffer, 1);
 												buffer->priv->parts[0].data_offset = dataoffset;
 												buffer->priv->parts[0].component_id = 0;
 												buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
@@ -706,13 +707,13 @@ arv_uv_stream_thread_sync (void *data)
 												buffer->priv->parts[0].x_offset = 0;
 												buffer->priv->parts[0].y_offset = 0;
 												int16_t padding = 0;
-												memcpy (padding, 
-													((char *) buffer->priv->data + partoffset + 48), 2);
-												buffer->priv->parts[0].x_padding = (int)padding;
-												memcpy (padding, 
-													((char *) buffer->priv->data + partoffset + 52), 2);
-												buffer->priv->parts[0].y_padding = (int)padding;
-													
+												// memcpy (padding, 
+												// 	((char *) buffer->priv->data + partoffset + 48), 2);
+												buffer->priv->parts[0].x_padding = 0;
+												// memcpy (padding, 
+												// 	((char *) buffer->priv->data + partoffset + 50), 2);
+												buffer->priv->parts[0].y_padding = 0;
+												// printf("%ix%i ", buffer->priv->parts[0].width, buffer->priv->parts[0].height );
 											}
 										}
                                     }
