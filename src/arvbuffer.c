@@ -42,7 +42,9 @@ arv_buffer_part_is_image (ArvBuffer *buffer, guint part_id)
                 part_id < buffer->priv->n_parts &&
                 (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                  buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
-                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) &&
+                 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART  ||
+				 buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER
+				 ) &&
                 (buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE ||
                  buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_BIPLANAR ||
                  buffer->priv->parts[part_id].data_type == ARV_BUFFER_PART_DATA_TYPE_2D_PLANE_TRIPLANAR ||
