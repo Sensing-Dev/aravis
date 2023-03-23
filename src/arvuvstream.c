@@ -674,6 +674,20 @@ arv_uv_stream_thread_sync (void *data)
                                 if(strncmp(buffer->priv->data, "GNDC", 4) != 0){
 									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GENDC", buffer->priv->data);
 								}else{
+									buffer->priv->has_gendc = TRUE;
+
+									int64_t container_dataoffset;
+									memcpy (&container_dataoffset, ((char *) buffer->priv->data + 40), 8);
+									buffer->priv->gendc_data_offset = (guint64) container_dataoffset;
+
+									int32_t descriptor_size;
+									memcpy (&descriptor_size, ((char *) buffer->priv->data + 48), 4);
+									buffer->priv->gendc_descriptor_size = (guint64) descriptor_size;
+
+									int64_t data_size;
+									memcpy (&data_size, ((char *) buffer->priv->data + 32), 8);
+									buffer->priv->gendc_data_size = (guint64) data_size;
+
                                     int component_count = 0;
                                     memcpy (&component_count, ((char *) buffer->priv->data + 52), 4);
 
@@ -695,6 +709,7 @@ arv_uv_stream_thread_sync (void *data)
 												int64_t dataoffset = 0;
 												memcpy (&dataoffset, ((char *) buffer->priv->data + partoffset + 32), 8);
 												// arv_buffer_set_n_parts(buffer, 1);
+												
 												buffer->priv->parts[0].data_offset = dataoffset;
 												buffer->priv->parts[0].component_id = 0;
 												buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;

@@ -52,19 +52,24 @@ typedef struct {
 	GDestroyNotify user_data_destroy_func;
 
 	ArvBufferStatus status;
-        size_t received_size;
+	size_t received_size;
 
 	ArvBufferPayloadType payload_type;
-        gboolean has_chunks;
+	gboolean has_chunks;
+	gboolean has_gendc;
 
 	guint32 chunk_endianness;
+
+	guint64 gendc_descriptor_size;
+	guint64 gendc_data_size;
+	guint64 gendc_data_offset;
 
 	guint64 frame_id;
 	guint64 timestamp_ns;
 	guint64 system_timestamp_ns;
 
-        guint n_parts;
-        ArvBufferPartInfos *parts;
+	guint n_parts;
+	ArvBufferPartInfos *parts;
 } ArvBufferPrivate;
 
 struct _ArvBuffer {

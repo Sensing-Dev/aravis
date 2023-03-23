@@ -186,6 +186,14 @@ arv_buffer_has_chunks (ArvBuffer *buffer)
                 buffer->priv->has_chunks;
 }
 
+gboolean
+arv_buffer_has_gendc (ArvBuffer *buffer)
+{
+	return ARV_IS_BUFFER (buffer) &&
+		buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS &&
+                buffer->priv->has_gendc;
+}
+
 /**
  * arv_buffer_get_chunk_data:
  * @buffer: a #ArvBuffer
@@ -487,6 +495,30 @@ arv_buffer_get_part_data (ArvBuffer *buffer, guint part_id, size_t *size)
                 *size = buffer->priv->parts[part_id].size;
 
         return buffer->priv->data + buffer->priv->parts[part_id].data_offset;
+}
+
+const void *
+arv_buffer_get_gendc_data (ArvBuffer *buffer, size_t *size)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+	g_return_val_if_fail (arv_buffer_has_gendc (buffer), NULL);
+
+	if (size != NULL)
+		*size = buffer->priv->gendc_data_size;
+
+	return buffer->priv->data + buffer->priv->gendc_data_offset;
+}
+
+const void *
+arv_buffer_get_gendc_descriptor (ArvBuffer *buffer, size_t *size)
+{
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+	g_return_val_if_fail (arv_buffer_has_gendc (buffer), NULL);
+
+	if (size != NULL)
+		*size = buffer->priv->gendc_descriptor_size;
+
+	return buffer->priv->data;
 }
 
 /**

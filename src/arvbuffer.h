@@ -110,54 +110,60 @@ typedef enum {
 #define ARV_TYPE_BUFFER             (arv_buffer_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvBuffer, arv_buffer, ARV, BUFFER, GObject)
 
-ARV_API ArvBuffer *		arv_buffer_new_allocate		(size_t size);
-ARV_API ArvBuffer *		arv_buffer_new			(size_t size, void *preallocated);
-ARV_API ArvBuffer * 		arv_buffer_new_full		(size_t size, void *preallocated,
-								 void *user_data, GDestroyNotify user_data_destroy_func);
+ARV_API ArvBuffer *				arv_buffer_new_allocate			(size_t size);
+ARV_API ArvBuffer *				arv_buffer_new					(size_t size, void *preallocated);
+ARV_API ArvBuffer * 			arv_buffer_new_full				(size_t size, void *preallocated,
+													 			void *user_data, GDestroyNotify user_data_destroy_func);
 
-ARV_API ArvBufferStatus		arv_buffer_get_status		(ArvBuffer *buffer);
+ARV_API ArvBufferStatus			arv_buffer_get_status			(ArvBuffer *buffer);
 
-ARV_API const void *		arv_buffer_get_user_data	(ArvBuffer *buffer);
+ARV_API const void *			arv_buffer_get_user_data		(ArvBuffer *buffer);
 
-ARV_API ArvBufferPayloadType	arv_buffer_get_payload_type	(ArvBuffer *buffer);
-ARV_API guint64			arv_buffer_get_timestamp	(ArvBuffer *buffer);
-ARV_API void			arv_buffer_set_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
-ARV_API guint64			arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
-ARV_API void			arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
-ARV_API void			arv_buffer_set_frame_id		(ArvBuffer *buffer, guint64 frame_id);
-ARV_API guint64 		arv_buffer_get_frame_id		(ArvBuffer *buffer);
-ARV_API const void *		arv_buffer_get_data		(ArvBuffer *buffer, size_t *size);
+ARV_API ArvBufferPayloadType	arv_buffer_get_payload_type		(ArvBuffer *buffer);
+ARV_API guint64					arv_buffer_get_timestamp		(ArvBuffer *buffer);
+ARV_API void					arv_buffer_set_timestamp		(ArvBuffer *buffer, guint64 timestamp_ns);
+ARV_API guint64					arv_buffer_get_system_timestamp	(ArvBuffer *buffer);
+ARV_API void					arv_buffer_set_system_timestamp	(ArvBuffer *buffer, guint64 timestamp_ns);
+ARV_API void					arv_buffer_set_frame_id			(ArvBuffer *buffer, guint64 frame_id);
+ARV_API guint64 				arv_buffer_get_frame_id			(ArvBuffer *buffer);
+ARV_API const void *			arv_buffer_get_data				(ArvBuffer *buffer, size_t *size);
 
-ARV_API guint                   arv_buffer_get_n_parts                  (ArvBuffer *buffer);
-ARV_API gint                    arv_buffer_find_component               (ArvBuffer *buffer, guint component_id);
-ARV_API const void *		arv_buffer_get_part_data		(ArvBuffer *buffer, guint part_id, size_t *size);
-ARV_API guint   		arv_buffer_get_part_component_id	(ArvBuffer *buffer, guint part_id);
-ARV_API ArvBufferPartDataType	arv_buffer_get_part_data_type	        (ArvBuffer *buffer, guint part_id);
-ARV_API ArvPixelFormat		arv_buffer_get_part_pixel_format	(ArvBuffer *buffer, guint part_id);
-ARV_API void			arv_buffer_get_part_region		(ArvBuffer *buffer, guint part_id,
-                                                                         gint *x, gint *y,
-                                                                         gint *width, gint *height);
-ARV_API void			arv_buffer_get_part_padding	        (ArvBuffer *buffer, guint part_id,
-                                                                         gint *x_padding, gint *y_padding);
-ARV_API gint			arv_buffer_get_part_width		(ArvBuffer *buffer, guint part_id);
-ARV_API gint			arv_buffer_get_part_height		(ArvBuffer *buffer, guint part_id);
-ARV_API gint			arv_buffer_get_part_x		        (ArvBuffer *buffer, guint part_id);
-ARV_API gint			arv_buffer_get_part_y		        (ArvBuffer *buffer, guint part_id);
+ARV_API guint                   arv_buffer_get_n_parts			(ArvBuffer *buffer);
+ARV_API gint                    arv_buffer_find_component		(ArvBuffer *buffer, guint component_id);
+ARV_API const void *			arv_buffer_get_part_data		(ArvBuffer *buffer, guint part_id, size_t *size);
+ARV_API guint   				arv_buffer_get_part_component_id(ArvBuffer *buffer, guint part_id);
+ARV_API ArvBufferPartDataType	arv_buffer_get_part_data_type	(ArvBuffer *buffer, guint part_id);
+ARV_API ArvPixelFormat			arv_buffer_get_part_pixel_format(ArvBuffer *buffer, guint part_id);
+ARV_API void					arv_buffer_get_part_region		(ArvBuffer *buffer, guint part_id,
+                                                                 gint *x, gint *y,
+                                                                 gint *width, gint *height);
+ARV_API void					arv_buffer_get_part_padding		(ArvBuffer *buffer, guint part_id,
+                                                                gint *x_padding, gint *y_padding);
+ARV_API gint					arv_buffer_get_part_width		(ArvBuffer *buffer, guint part_id);
+ARV_API gint					arv_buffer_get_part_height		(ArvBuffer *buffer, guint part_id);
+ARV_API gint					arv_buffer_get_part_x		    (ArvBuffer *buffer, guint part_id);
+ARV_API gint					arv_buffer_get_part_y		    (ArvBuffer *buffer, guint part_id);
 
-ARV_API const void *		arv_buffer_get_image_data		(ArvBuffer *buffer, size_t *size);
-ARV_API ArvPixelFormat		arv_buffer_get_image_pixel_format	(ArvBuffer *buffer);
-ARV_API void			arv_buffer_get_image_region		(ArvBuffer *buffer,
-                                                                         gint *x, gint *y,
-                                                                         gint *width, gint *height);
-ARV_API void			arv_buffer_get_image_padding		(ArvBuffer *buffer,
-                                                                         gint *x_padding, gint *y_padding);
-ARV_API gint			arv_buffer_get_image_width		(ArvBuffer *buffer);
-ARV_API gint			arv_buffer_get_image_height		(ArvBuffer *buffer);
-ARV_API gint			arv_buffer_get_image_x			(ArvBuffer *buffer);
-ARV_API gint			arv_buffer_get_image_y			(ArvBuffer *buffer);
+ARV_API const void *			arv_buffer_get_image_data		(ArvBuffer *buffer, size_t *size);
+ARV_API ArvPixelFormat			arv_buffer_get_image_pixel_format(ArvBuffer *buffer);
+ARV_API void					arv_buffer_get_image_region		(ArvBuffer *buffer,
+                                                                 gint *x, gint *y,
+                                                                gint *width, gint *height);
+ARV_API void					arv_buffer_get_image_padding	(ArvBuffer *buffer,
+                                                                 gint *x_padding, gint *y_padding);
+ARV_API gint					arv_buffer_get_image_width		(ArvBuffer *buffer);
+ARV_API gint					arv_buffer_get_image_height		(ArvBuffer *buffer);
+ARV_API gint					arv_buffer_get_image_x			(ArvBuffer *buffer);
+ARV_API gint					arv_buffer_get_image_y			(ArvBuffer *buffer);
 
-ARV_API gboolean		arv_buffer_has_chunks		(ArvBuffer *buffer);
-ARV_API const void *		arv_buffer_get_chunk_data	(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
+ARV_API gboolean				arv_buffer_has_chunks			(ArvBuffer *buffer);
+ARV_API const void *			arv_buffer_get_chunk_data		(ArvBuffer *buffer, guint64 chunk_id, size_t *size);
+
+ARV_API gboolean				arv_buffer_has_gendc			(ArvBuffer *buffer);
+// ARV_API gint					arv_buffer_get_gendc_data_size	(ArvBuffer *buffer);
+// ARV_API gint					arv_buffer_get_gendc_descriptor_size (ArvBuffer *buffer);
+ARV_API const void *			arv_buffer_get_gendc_data		(ArvBuffer *buffer, size_t *size);
+ARV_API const void *			arv_buffer_get_gendc_descriptor	(ArvBuffer *buffer, size_t *size);
 
 G_END_DECLS
 
