@@ -433,15 +433,39 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 	arv_stream_get_n_buffers (stream, &n_input_buffers, &n_output_buffers);
 	arv_debug_viewer ("pop buffer (%d,%d)", n_input_buffers, n_output_buffers);
 
+	// flush N-1 buffers
+	for (gint i = 0; i < n_output_buffers; ++i){
+
+		if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
+			size_t size;
+					gint part_id;
+
+					part_id = arv_buffer_find_component(arv_buffer, viewer->component_id);
+					if (part_id < 0)
+							part_id = 0;
+
+					arv_buffer_get_part_data (arv_buffer, part_id, &size);
+
+			g_clear_object( &viewer->last_buffer );
+			viewer->last_buffer = g_object_ref( arv_buffer );
+
+			gst_app_src_push_buffer (GST_APP_SRC (viewer->appsrc), arv_to_gst_buffer (arv_buffer, part_id, stream));
+		} else {
+			arv_debug_viewer ("push discarded buffer");
+			arv_stream_push_buffer (stream, arv_buffer);
+		}
+		arv_buffer = arv_stream_pop_buffer (stream);
+	}
+
 	if (arv_buffer_get_status (arv_buffer) == ARV_BUFFER_STATUS_SUCCESS) {
 		size_t size;
-                gint part_id;
+				gint part_id;
 
-                part_id = arv_buffer_find_component(arv_buffer, viewer->component_id);
-                if (part_id < 0)
-                        part_id = 0;
+				part_id = arv_buffer_find_component(arv_buffer, viewer->component_id);
+				if (part_id < 0)
+						part_id = 0;
 
-                arv_buffer_get_part_data (arv_buffer, part_id, &size);
+				arv_buffer_get_part_data (arv_buffer, part_id, &size);
 
 		g_clear_object( &viewer->last_buffer );
 		viewer->last_buffer = g_object_ref( arv_buffer );
