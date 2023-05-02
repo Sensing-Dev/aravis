@@ -41,6 +41,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvgcboolean.h>
 #include <arvdebugprivate.h>
 

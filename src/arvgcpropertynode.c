@@ -34,6 +34,7 @@
 #include <arvgcfloat.h>
 #include <arvgcboolean.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvgc.h>
 #include <arvdomtext.h>
 #include <arvmisc.h>

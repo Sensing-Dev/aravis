@@ -41,6 +41,7 @@
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvbuffer.h>
 #include <arvgc.h>
 #include <arvgvdevice.h>

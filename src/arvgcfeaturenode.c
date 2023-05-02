@@ -35,6 +35,7 @@
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvgcenumeration.h>
 #include <arvgcenums.h>
 #include <arvmisc.h>

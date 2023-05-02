@@ -35,6 +35,7 @@
 #include <arvgcselector.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvgcport.h>
 #include <arvgcprivate.h>
 #include <arvmiscprivate.h>

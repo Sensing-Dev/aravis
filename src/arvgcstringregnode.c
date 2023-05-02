@@ -23,6 +23,7 @@
 #include <arvgcstringregnode.h>
 #include <arvgcstring.h>
 #include <arvgcregister.h>
+#include <arvgcregister.h>
 #include <arvgc.h>
 #include <string.h>
 

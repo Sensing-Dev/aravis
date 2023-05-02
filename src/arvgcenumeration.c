@@ -30,6 +30,7 @@
 #include <arvgcinteger.h>
 #include <arvgcselector.h>
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
 #include <arvmisc.h>

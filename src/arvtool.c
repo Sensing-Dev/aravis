@@ -169,6 +169,12 @@ arv_tool_show_feature (ArvGcFeatureNode *node, ArvToolListMode list_mode, int le
                                         value = g_strdup_printf ("%s",
                                                                  arv_gc_boolean_get_value (ARV_GC_BOOLEAN (node),
                                                                                            &error) ?  "true" : "false");
+                                } else if (ARV_IS_GC_REGISTER (node)) {
+                                        void* buffer;
+                                        guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (node), &error);
+                                        arv_gc_register_get (ARV_GC_REGISTER (node), buffer, length, &error);
+                                                                        
+                                        value = g_strdup_printf ("%s", (char *)buffer ?  "true" : "false");
                                 }
                         }
 

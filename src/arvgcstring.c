@@ -26,6 +26,7 @@
  */
 
 #include <arvgcstring.h>
+#include <arvgcregister.h>
 #include <arvmisc.h>
 #include <arvgcfeaturenodeprivate.h>
 
