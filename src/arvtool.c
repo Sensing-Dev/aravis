@@ -370,7 +370,15 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
 
                                                 if (error == NULL)
                                                         printf ("%s = %s\n", tokens[0], value ?  "true" : "false");
-                                        } else {
+                                        } else if (ARV_IS_GC_REGISTER (feature)) {
+                                                printf("[LOG] arv_tool_control::The type of this node is Register\n");
+                                                void* buffer;
+                                                guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (feature), &error);
+                                                arv_gc_register_get (ARV_GC_REGISTER (feature), buffer, length, &error);
+
+                                                if (error == NULL)
+                                                       printf ("%s\n", (char*)buffer);
+                                        }else {
                                                 const char *value =  arv_gc_feature_node_get_value_as_string
                                                         (ARV_GC_FEATURE_NODE (feature), &error);
 
