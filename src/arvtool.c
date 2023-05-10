@@ -373,24 +373,12 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                                         printf ("%s = %s\n", tokens[0], value ?  "true" : "false");
                                         } else if (ARV_IS_GC_REGISTER (feature)) {
                                                 printf("[LOG] arv_tool_control::The type of this node is Register\n");
-                                                void* buffer;
-                                                char test[64] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
-                                                buffer = (void*)test;
+                                                char buffer[2048];
 
                                                 guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (feature), &error);
                                                 printf("[LOG] arv_tool_control::Buffer length is %" G_GUINT64_FORMAT "\n", length);
 
-                                                printf("[LOG] arv_tool_control::test to fill buffer with \"a\":");
-                                                for( int i = 0; i < length; i++){
-                                                        if ( i%8 == 0){
-                                                                printf("\n\t");
-                                                        }
-                                                        printf("0x%02x ", *(((char*)buffer)+i));
-                                                }
-
-
-
-                                                arv_gc_register_get (ARV_GC_REGISTER (feature), buffer, length, &error);
+                                                arv_gc_register_get (ARV_GC_REGISTER (feature), (void*)buffer, length, &error);
 
                                                 if (buffer == NULL){
                                                         printf("[LOG] arv_tool_control::Buffer is empty\n");
