@@ -270,6 +270,7 @@ static void
 arv_tool_control (int argc, char **argv, ArvDevice *device)
 {
         int i;
+        printf("[LOG] arv_tool_control::\n");
 
         for (i = 2; i < argc; i++) {
                 ArvGcNode *feature;
@@ -373,11 +374,45 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                         } else if (ARV_IS_GC_REGISTER (feature)) {
                                                 printf("[LOG] arv_tool_control::The type of this node is Register\n");
                                                 void* buffer;
+                                                char test[64] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
+                                                buffer = (void*)test;
+
                                                 guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (feature), &error);
+                                                printf("[LOG] arv_tool_control::Buffer length is %" G_GUINT64_FORMAT "\n", length);
+
+                                                printf("[LOG] arv_tool_control::test to fill buffer with \"a\":");
+                                                for( int i = 0; i < length; i++){
+                                                        if ( i%8 == 0){
+                                                                printf("\n\t");
+                                                        }
+                                                        printf("0x%02x ", *(((char*)buffer)+i));
+                                                }
+
+
+
                                                 arv_gc_register_get (ARV_GC_REGISTER (feature), buffer, length, &error);
 
-                                                if (error == NULL)
-                                                       printf ("%s\n", (char*)buffer);
+                                                if (buffer == NULL){
+                                                        printf("[LOG] arv_tool_control::Buffer is empty\n");
+                                                }
+                                                char signature[4];
+                                                memcpy(signature, buffer, 4);
+
+                                                printf("[LOG] arv_tool_control:: the first 4 byte of gendc descriptor = [%s](string)\n", &signature);
+                                                printf("[LOG] arv_tool_control:: the first 4 byte of gendc descriptor = [%d](int)\n", *((int*)signature));
+                                                printf("[LOG] arv_tool_control:: the whole %" G_GUINT64_FORMAT " byte of gendc descriptor = [%d](int)\n", length, *(int*)buffer);
+
+                                                if (buffer != NULL){
+                                                        printf("[LOG] arv_tool_control::buffer if not NULL:");
+                                                        for( int i = 0; i < length; i++){
+                                                                if ( i%8 == 0){
+                                                                        printf("\n\t");
+                                                                }
+                                                                printf("0x%02x ", *(((char*)buffer)+i));
+                                                        }
+                                                }
+
+
                                         }else {
                                                 const char *value =  arv_gc_feature_node_get_value_as_string
                                                         (ARV_GC_FEATURE_NODE (feature), &error);
@@ -774,7 +809,7 @@ main (int argc, char **argv)
         if (arv_option_gv_allow_broadcast_discovery_ack)
                 arv_set_interface_flags ("GigEVision", ARV_GV_INTERFACE_FLAGS_ALLOW_BROADCAST_DISCOVERY_ACK);
 
-	device_id = arv_option_device_address != NULL ?
+       device_id = arv_option_device_address != NULL ?
                 arv_option_device_address :
                 (is_glob_pattern ? NULL : arv_option_device_selection);
 	if (device_id != NULL) {
