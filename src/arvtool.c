@@ -389,6 +389,7 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                                                 printf("0x%02x ", *(((char*)buffer)+i));
                                                         }
                                                 }
+                                                printf("\n");
                                                 free(buffer);
                                         }else {
                                                 const char *value =  arv_gc_feature_node_get_value_as_string
