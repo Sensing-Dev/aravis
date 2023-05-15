@@ -373,6 +373,9 @@ static void *
 _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {
 	void *node;
+	if (*error != NULL){
+		printf("ERROR is not null\n");
+	}
 
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);
@@ -521,45 +524,6 @@ arv_device_get_string_feature_value (ArvDevice *device, const char *feature, GEr
 	node = _get_feature (device, ARV_TYPE_GC_STRING, feature, error);
 	if (node != NULL)
 		return arv_gc_string_get_value (ARV_GC_STRING (node), error);
-
-	return NULL;
-}
-
-// /**
-//  * arv_device_set_register_feature_value:
-//  *
-//  * Set the register feature value.
-//  *
-//  * Since: 0.8.0
-//  */
-
-// void
-// arv_device_set_register_feature_value (ArvDevice *device, const char *feature, const char *value, GError **error)
-// {
-// 	ArvGcNode *node;
-
-// 	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
-// 	if (node != NULL)
-// 		arv_gc_register_set (ARV_GC_REGISTER (node), value, arv_gc_register_get_length(ARV_GC_REGISTER (node), error), error);
-// }
-
-/**
- * arv_device_get_register_feature_value:
- *
- * Returns: the register feature value, %NULL on error.
- *
- * Since: 0.8.0
- */
-
-void*
-arv_device_get_register_feature_value (ArvDevice *device, const char *feature, GError  **error)
-{
-	ArvGcNode *node;
-	void* buffer;
-
-	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
-	if (node != NULL)
-		arv_gc_register_get (ARV_GC_REGISTER (node), buffer, arv_gc_register_get_length(ARV_GC_REGISTER (node), error), error);
 
 	return NULL;
 }
@@ -853,10 +817,9 @@ guint64
 arv_device_get_register_feature_length (ArvDevice *device, const char *feature, GError **error)
 {
 	ArvGcNode *node;
-
 	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
 	if (node != NULL)
-		return arv_gc_register_get_length(ARV_GC_REGISTER (node), &error);
+		return arv_gc_register_get_length(ARV_GC_REGISTER (node), error);
 }
 
 /**
