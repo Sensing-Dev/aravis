@@ -839,6 +839,73 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
 }
 
 /**
+ * arv_device_get_register_feature_length:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature length.
+ *
+ * Since: 0.8.0
+ */
+
+guint64
+arv_device_get_register_feature_length (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		return arv_gc_register_get_length(ARV_GC_REGISTER (node), &error);
+}
+
+/**
+ * arv_device_set_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder
+ *
+ * Set the register feature value.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_device_set_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
+	if (node != NULL)
+		arv_gc_register_set (ARV_GC_REGISTER (node), value, length, error);
+}
+
+/**
+ * arv_device_get_register_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Returns: the register feature value.
+ *
+ * Since: 0.8.0
+ */
+
+void*
+arv_device_get_register_feature_value (ArvDevice *device, const char *feature, guint64 length, GError **error)
+{
+	ArvGcNode *node;
+	void* buffer;
+
+	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	if (node != NULL)
+		arv_gc_register_get (ARV_GC_FLOAT (node), buffer, length, error);
+
+	return buffer;
+}
+
+/**
  * arv_device_dup_available_enumeration_feature_values:
  * @device: an #ArvDevice
  * @feature: feature name
