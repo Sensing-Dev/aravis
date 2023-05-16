@@ -855,17 +855,14 @@ arv_device_set_register_feature_value (ArvDevice *device, const char *feature, g
  * Since: 0.8.0
  */
 
-void*
-arv_device_get_register_feature_value (ArvDevice *device, const char *feature, guint64 length, GError **error)
+void
+arv_device_get_register_feature_value (ArvDevice *device, const char *feature, guint64 length, void* value, GError **error)
 {
 	ArvGcNode *node;
-	void* buffer;
 
-	node = _get_feature (device, ARV_TYPE_GC_FLOAT, feature, error);
+	node = _get_feature (device, ARV_TYPE_GC_REGISTER, feature, error);
 	if (node != NULL)
-		arv_gc_register_get (ARV_GC_FLOAT (node), buffer, length, error);
-
-	return buffer;
+		arv_gc_register_get (ARV_GC_REGISTER (node), value, length, error);
 }
 
 /**
