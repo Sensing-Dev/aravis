@@ -371,7 +371,7 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                                 if (error == NULL)
                                                         printf ("%s = %s\n", tokens[0], value ?  "true" : "false");
                                         } else if (ARV_IS_GC_REGISTER (feature)) {
-                                                char* buffer;
+                                                unsigned char* buffer;
 
                                                 guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER (feature), &error);
                                                 if (error == NULL)
@@ -386,7 +386,7 @@ arv_tool_control (int argc, char **argv, ArvDevice *device)
                                                                 if ( i%8 == 0){
                                                                         printf("\n\t");
                                                                 }
-                                                                printf("0x%02x ", *(((char*)buffer)+i));
+                                                                printf("0x%02x ", *((buffer)+i));
                                                         }
                                                 }
                                                 printf("\n");
