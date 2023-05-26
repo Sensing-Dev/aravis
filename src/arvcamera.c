@@ -2689,6 +2689,71 @@ arv_camera_get_float_increment (ArvCamera *camera, const char *feature, GError *
 	return arv_device_get_float_feature_increment (priv->device, feature, error);
 }
 
+
+/**
+ * arv_camera_set_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @value: new feature value
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Set a float feature value.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_camera_set_register (ArvCamera *camera, const char *feature,guint64 length, void* value, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_set_register_feature_value (priv->device, feature, length, value, error);
+}
+
+/**
+ * arv_camera_get_register:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the float feature value, 0.0 on error.
+ *
+ * Since: 0.8.0
+ */
+
+void
+arv_camera_get_register (ArvCamera *camera, const char *feature,guint64 length, void* value, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+	return arv_device_get_register_feature_value (priv->device, feature, length, value, error);
+}
+
+/**
+ * arv_camera_get_register_length:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: the float feature value, 0.0 on error.
+ *
+ * Since: 0.8.0
+ */
+
+guint64
+arv_camera_get_register_length (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), 0.0);
+
+	return arv_device_get_register_feature_length (priv->device, feature, error);
+}
+
 /**
  * arv_camera_dup_available_enumerations:
  * @camera: a #ArvCamera

@@ -809,8 +809,6 @@ arv_device_get_float_feature_increment (ArvDevice *device, const char *feature, 
  * @error: a #GError placeholder
  *
  * Returns: the register feature length.
- *
- * Since: 0.8.0
  */
 
 guint64
@@ -830,8 +828,6 @@ arv_device_get_register_feature_length (ArvDevice *device, const char *feature, 
  * @error: a #GError placeholder
  *
  * Set the register feature value.
- *
- * Since: 0.8.0
  */
 
 void
@@ -848,11 +844,10 @@ arv_device_set_register_feature_value (ArvDevice *device, const char *feature, g
  * arv_device_get_register_feature_value:
  * @device: a #ArvDevice
  * @feature: feature name
+ * @value: obtained  feature value
  * @error: a #GError placeholder
  *
- * Returns: the register feature value.
- *
- * Since: 0.8.0
+ * Retrive the register feature value.
  */
 
 void
