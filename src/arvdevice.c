@@ -373,9 +373,6 @@ static void *
 _get_feature (ArvDevice *device, GType node_type, const char *feature, GError **error)
 {
 	void *node;
-	if (*error != NULL){
-		printf("ERROR is not null\n");
-	}
 
 	g_return_val_if_fail (ARV_IS_DEVICE (device), NULL);
 	g_return_val_if_fail (feature != NULL, NULL);

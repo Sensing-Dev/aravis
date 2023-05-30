@@ -484,17 +484,12 @@ main (int argc, char **argv)
         setbuf(stdout,NULL);
     #endif
 
-	printf("[LOG] 1\n");
-
 	if (arv_option_camera_name == NULL)
 		g_print ("Looking for the first available camera\n");
 	else
 		g_print ("Looking for camera '%s'\n", arv_option_camera_name);
 
-	printf("[LOG] 2\n");
-
 	camera = arv_camera_new (arv_option_camera_name, &error);
-	printf("[LOG] 3\n");
 	if (camera != NULL) {
 		const char *vendor_name =NULL;
 		const char *model_name = NULL;
@@ -538,8 +533,6 @@ main (int argc, char **argv)
 			}
 		}
 
-		printf("[LOG] 4\n");
-
 		error = NULL;
 
 		if (error == NULL && arv_camera_are_chunks_available (camera, NULL))
@@ -556,8 +549,6 @@ main (int argc, char **argv)
 			if (error == NULL && arv_option_bandwidth_limit >= 0)
                                         arv_camera_uv_set_bandwidth (camera, arv_option_bandwidth_limit, &error);
 		}
-
-		printf("[LOG] 5\n");
 
 		if (arv_camera_is_gv_device (camera)) {
 			if (error == NULL) arv_camera_gv_select_stream_channel (camera, arv_option_gv_stream_channel, &error);
