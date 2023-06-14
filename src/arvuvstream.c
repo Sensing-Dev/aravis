@@ -151,7 +151,6 @@ arv_uv_stream_buffer_context_notify_transfer_completed (ArvUvStreamBufferContext
 static
 void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
 {
-    printf("arv_uv_stream_leader_cb\n");
 	ArvUvStreamBufferContext *ctx = transfer->user_data;
 	ArvUvspPacket *packet = (ArvUvspPacket*)transfer->buffer;
 
@@ -174,7 +173,8 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                     = arv_uvsp_packet_get_buffer_payload_type(packet, &ctx->buffer->priv->has_chunks);
                                 ctx->buffer->priv->chunk_endianness = G_LITTLE_ENDIAN;
                                 if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
-                                    ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA) {
+                                    ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
+									ctx->buffer->priv->payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER) {
                                         arv_buffer_set_n_parts(ctx->buffer, 1);
                                         ctx->buffer->priv->parts[0].data_offset = 0;
                                         ctx->buffer->priv->parts[0].component_id = 0;
@@ -187,13 +187,6 @@ void arv_uv_stream_leader_cb (struct libusb_transfer *transfer)
                                                                     &ctx->buffer->priv->parts[0].y_offset,
                                                                     &ctx->buffer->priv->parts[0].x_padding,
                                                                     &ctx->buffer->priv->parts[0].y_padding);
-                                }else if(ctx->buffer->priv->payload_type == ARV_UVSP_PAYLOAD_TYPE_GENDC_CONTAINER){
-                                    // int component_count = 0;
-                                    // memcpy (((char *) ctx->buffer->priv->data), &component_count, 4);
-                                    // printf(component_count);
-                                    // if(strncmp(buffer->priv->data, "GNDC", 4) == 0){
-
-                                    // }
                                 }
                                 ctx->buffer->priv->frame_id = arv_uvsp_packet_get_frame_id (packet);
                                 ctx->buffer->priv->timestamp_ns = arv_uvsp_packet_get_timestamp (packet);
@@ -225,6 +218,45 @@ void arv_uv_stream_payload_cb (struct libusb_transfer *transfer)
                         switch (transfer->status) {
                                 case LIBUSB_TRANSFER_COMPLETED:
                                         ctx->total_payload_transferred += transfer->actual_length;
+
+										// GENDC =========================================================================
+										if (ctx->buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
+											if(!arv_uvsp_packet_is_gendc (ctx->buffer->priv->data)){
+												arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GNDC", ctx->buffer->priv->data);
+											}else{
+												ctx->buffer->priv->has_gendc = TRUE;
+												ctx->buffer->priv->gendc_data_offset = arv_uvsp_packet_get_gendc_dataoffset(ctx->buffer->priv->data);
+												ctx->buffer->priv->gendc_descriptor_size = arv_uvsp_packet_get_gendc_descriptorsize(ctx->buffer->priv->data);
+												ctx->buffer->priv->gendc_data_size = arv_uvsp_packet_get_gendc_datasize(ctx->buffer->priv->data);
+												int component_count = (int) arv_uvsp_packet_get_gendc_componentcount(ctx->buffer->priv->data);
+												for(int ith_component = 0; ith_component < component_count; ++ith_component){
+
+													int64_t ith_component_offset = arv_uvsp_packet_get_gendc_componentoffset(ctx->buffer->priv->data, ith_component);
+
+													// only if the component is valid and have an image data (GDC_INTENSITY from SFNC)
+													if (arv_uvsp_packet_get_gendc_iscomponentvalid(ctx->buffer->priv->data + ith_component_offset)
+														&& arv_uvsp_packet_get_gendc_componenttypeid(ctx->buffer->priv->data + ith_component_offset) == 0x1 ){
+
+														guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(ctx->buffer->priv->data + ith_component_offset, 0);
+
+														ctx->buffer->priv->parts[0].data_offset = arv_uvsp_packet_get_gendc_partdatapffset(ctx->buffer->priv->data + partoffset);
+														ctx->buffer->priv->parts[0].component_id = 0; //ith_component;
+														ctx->buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+														ctx->buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_gendc_componentpixelformat(ctx->buffer->priv->data + ith_component_offset);
+														ctx->buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_x(ctx->buffer->priv->data + partoffset);
+														ctx->buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_y(ctx->buffer->priv->data + partoffset);
+														ctx->buffer->priv->parts[0].x_offset = 0;
+														ctx->buffer->priv->parts[0].y_offset = 0;
+														ctx->buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(ctx->buffer->priv->data + partoffset);
+														ctx->buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(ctx->buffer->priv->data + partoffset);
+
+														// current arvuv can accept parts[0] only?
+														ith_component = component_count;
+													}
+													
+												}											
+											}
+										}
                                         break;
                                 default:
                                         arv_warning_stream_thread ("Payload transfer failed: transfer->status = %d",
