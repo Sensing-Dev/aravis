@@ -337,7 +337,6 @@ void arv_uv_stream_trailer_cb (struct libusb_transfer *transfer)
 static ArvUvStreamBufferContext*
 arv_uv_stream_buffer_context_new (ArvBuffer *buffer, ArvUvStreamThreadData *thread_data, gint *total_submitted_bytes)
 {
-    printf("arv_uv_stream_buffer_context_new\n");
 	ArvUvStreamBufferContext* ctx = g_malloc0 (sizeof(ArvUvStreamBufferContext));
 	int i;
 	size_t offset = 0;
