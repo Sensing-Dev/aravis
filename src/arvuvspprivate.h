@@ -99,6 +99,58 @@ typedef struct {
 	ArvUvspTrailerInfos infos;
 } ArvUvspTrailer;
 
+typedef struct {
+	guint32 signature;
+	guint32 version_with_0;
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint64 id;
+	guint64 variable_field_with_0;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 descriptorsize;
+	guint32 component_count;
+	// guint64 component_offset[1];
+} ArvUvspGenDCContainerHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;
+	guint16 reserved;
+	guint16 groupid;
+	guint16 sourceid;
+	guint16 regionid;
+	guint32 region_offset_x;
+	guint32 region_offset_y;
+	guint64 timestamp;
+	guint64 typeid;
+	guint32 format;
+	guint16 reserved2;
+	guint16 part_count;
+	// guint64* part_offset;
+} ArvUvspGenDCComponentHeader;
+
+typedef struct {
+	guint16 header_type;
+	guint16 flags;
+	guint32 header_size;	
+	guint32 format;
+	guint16 reserved;
+	guint16 flow_id;
+	guint64 flowoffset;
+	guint64 datasize;
+	guint64 dataoffset;
+	guint32 dimension_x;
+	guint32 dimension_y;
+	guint16 padding_x;
+	guint16 padding_y;
+	guint32 info_reserved;
+} ArvUvspGenDCPartHeader;
+
+
+
 #pragma pack(pop)
 
 char * 			arv_uvsp_packet_to_string 		(const ArvUvspPacket *packet);
@@ -193,6 +245,166 @@ arv_uvsp_packet_get_timestamp (ArvUvspPacket *packet)
 	leader = (ArvUvspLeader *)packet;
 	return GUINT64_FROM_LE (leader->infos.timestamp);
 }
+
+static inline gboolean
+arv_uvsp_packet_is_gendc(char *packet){
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->signature == 0x43444E47;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_dataoffset(char *packet){
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->dataoffset;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_descriptorsize(char *packet){
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->descriptorsize;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_datasize(char *packet){
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->datasize;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_componentcount(char *packet){
+	ArvUvspGenDCContainerHeader *gendc_container_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_container_header = (ArvUvspGenDCContainerHeader*)packet;
+	return gendc_container_header->component_count;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componentoffset(char *packet, int ith){
+	guint64 ith_component_offset = 0;
+	memcpy (&ith_component_offset, ((char *) packet + 56 + 8 * ith), 8);
+	return ith_component_offset;
+}
+
+static inline gboolean
+arv_uvsp_packet_get_gendc_iscomponentvalid(char *packet){
+	ArvUvspGenDCComponentHeader *gendc_component_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->flags == 0;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componenttypeid(char *packet){
+	ArvUvspGenDCComponentHeader* gendc_component_header;
+
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->typeid;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_partoffset(char *packet, int jth){
+	guint64 jth_part_offset = 0;
+	memcpy (&jth_part_offset, ((char *) packet + 48 + 8 * jth), 8);
+	return jth_part_offset;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_partdatapffset(char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dataoffset;
+}
+
+static inline guint64
+arv_uvsp_packet_get_gendc_componentpixelformat(char *packet){
+	ArvUvspGenDCComponentHeader* gendc_component_header;
+
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_component_header = (ArvUvspGenDCComponentHeader*)packet;
+	return gendc_component_header->format;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_partdimension_x(char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dimension_x;
+}
+
+static inline guint32
+arv_uvsp_packet_get_gendc_partdimension_y(char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->dimension_y;
+}
+
+static inline guint16
+arv_uvsp_packet_get_gendc_partpadding_x(char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->padding_x;
+}
+
+static inline guint16
+arv_uvsp_packet_get_gendc_partpadding_y(char *packet){
+	ArvUvspGenDCPartHeader *gendc_part_header;
+	if (packet == NULL){
+		return 0;
+	}
+
+	gendc_part_header = (ArvUvspGenDCPartHeader*)packet;
+	return gendc_part_header->padding_y;
+}
+
 
 G_END_DECLS
 

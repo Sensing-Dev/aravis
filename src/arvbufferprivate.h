@@ -60,7 +60,7 @@ typedef struct {
 
 	guint32 chunk_endianness;
 
-	guint64 gendc_descriptor_size;
+	guint32 gendc_descriptor_size;
 	guint64 gendc_data_size;
 	guint64 gendc_data_offset;
 

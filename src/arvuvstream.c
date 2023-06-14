@@ -662,7 +662,9 @@ arv_uv_stream_thread_sync (void *data)
                     }
                     break;
                 case ARV_UVSP_PACKET_TYPE_DATA:
+					
                     if (buffer != NULL && buffer->priv->status == ARV_BUFFER_STATUS_FILLING) {
+						
                         if (offset + transferred <= buffer->priv->allocated_size) {
                             if (packet == incoming_buffer)
                                     memcpy (((char *) buffer->priv->data) + offset, packet, transferred);
@@ -671,66 +673,40 @@ arv_uv_stream_thread_sync (void *data)
 
 							// GENDC =========================================================================
                             if (buffer->priv->payload_type == ARV_BUFFER_PAYLOAD_TYPE_GENDC_CONTAINER){
-                                if(strncmp(buffer->priv->data, "GNDC", 4) != 0){
-									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GENDC", buffer->priv->data);
+                                if(!arv_uvsp_packet_is_gendc (buffer->priv->data)){
+									arv_warning_sp ("Invalid GenDC Container: Signature shows %.4s which is supposed to be GNDC", buffer->priv->data);
 								}else{
 									buffer->priv->has_gendc = TRUE;
+									buffer->priv->gendc_data_offset = arv_uvsp_packet_get_gendc_dataoffset(buffer->priv->data);
+									buffer->priv->gendc_descriptor_size = arv_uvsp_packet_get_gendc_descriptorsize(buffer->priv->data);
+									buffer->priv->gendc_data_size = arv_uvsp_packet_get_gendc_datasize(buffer->priv->data);
 
-									int64_t container_dataoffset;
-									memcpy (&container_dataoffset, ((char *) buffer->priv->data + 40), 8);
-									buffer->priv->gendc_data_offset = (guint64) container_dataoffset;
-
-									int32_t descriptor_size;
-									memcpy (&descriptor_size, ((char *) buffer->priv->data + 48), 4);
-									buffer->priv->gendc_descriptor_size = (guint64) descriptor_size;
-
-									int64_t data_size;
-									memcpy (&data_size, ((char *) buffer->priv->data + 32), 8);
-									buffer->priv->gendc_data_size = (guint64) data_size;
-
-                                    int component_count = 0;
-                                    memcpy (&component_count, ((char *) buffer->priv->data + 52), 4);
-
+                                    int component_count = (int) arv_uvsp_packet_get_gendc_componentcount(buffer->priv->data);
                                     for(int ith_component = 0; ith_component < component_count; ++ith_component){
-                                        char invalid = 0;
-										int64_t ith_component_offset = 0;
-										memcpy (&ith_component_offset, 
-											((char *) buffer->priv->data + 56 + 8 * ith_component), 8);
-                                        memcpy (&invalid, ((char *) buffer->priv->data + ith_component_offset + 2), 1);
-                                        // printf("%i(%jd) : "BYTE_TO_BINARY_PATTERN"\n", ith_component, ith_component_offset, BYTE_TO_BINARY(invalid));
-										if (invalid == 0){ // if container is valid
-											int64_t typeid = 0;
-											memcpy (&typeid, ((char *) buffer->priv->data + ith_component_offset + 32), 8);
-											if (typeid == 0x1){ // if the container has image
-												// Let PartCount is 1 for now
-												int64_t partoffset = 0;
-												memcpy (&partoffset, ((char *) buffer->priv->data + ith_component_offset + 48), 8);
 
-												int64_t dataoffset = 0;
-												memcpy (&dataoffset, ((char *) buffer->priv->data + partoffset + 32), 8);
-												// arv_buffer_set_n_parts(buffer, 1);
-												
-												buffer->priv->parts[0].data_offset = dataoffset;
-												buffer->priv->parts[0].component_id = 0;
-												buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
-												memcpy (&(buffer->priv->parts[0].pixel_format), 
-													((char *) buffer->priv->data + ith_component_offset + 40), 4);
-												memcpy (&(buffer->priv->parts[0].width), 
-													((char *) buffer->priv->data + partoffset + 40), 4);
-												memcpy (&(buffer->priv->parts[0].height), 
-													((char *) buffer->priv->data + partoffset + 44), 4);
-												buffer->priv->parts[0].x_offset = 0;
-												buffer->priv->parts[0].y_offset = 0;
-												int16_t padding = 0;
-												// memcpy (padding, 
-												// 	((char *) buffer->priv->data + partoffset + 48), 2);
-												buffer->priv->parts[0].x_padding = 0;
-												// memcpy (padding, 
-												// 	((char *) buffer->priv->data + partoffset + 50), 2);
-												buffer->priv->parts[0].y_padding = 0;
-												// printf("%ix%i ", buffer->priv->parts[0].width, buffer->priv->parts[0].height );
-											}
+										int64_t ith_component_offset = arv_uvsp_packet_get_gendc_componentoffset(buffer->priv->data, ith_component);
+
+										// only if the component is valid and have an image data (GDC_INTENSITY from SFNC)
+										if (arv_uvsp_packet_get_gendc_iscomponentvalid(buffer->priv->data + ith_component_offset)
+											&& arv_uvsp_packet_get_gendc_componenttypeid(buffer->priv->data + ith_component_offset) == 0x1 ){
+
+											guint64 partoffset = arv_uvsp_packet_get_gendc_partoffset(buffer->priv->data + ith_component_offset, 0);
+
+											buffer->priv->parts[0].data_offset = arv_uvsp_packet_get_gendc_partdatapffset(buffer->priv->data + partoffset);
+											buffer->priv->parts[0].component_id = 0; //ith_component;
+											buffer->priv->parts[0].data_type = ARV_BUFFER_PART_DATA_TYPE_2D_IMAGE;
+											buffer->priv->parts[0].pixel_format = arv_uvsp_packet_get_gendc_componentpixelformat(buffer->priv->data + ith_component_offset);
+											buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_x(buffer->priv->data + partoffset);
+											buffer->priv->parts[0].width = arv_uvsp_packet_get_gendc_partdimension_y(buffer->priv->data + partoffset);
+											buffer->priv->parts[0].x_offset = 0;
+											buffer->priv->parts[0].y_offset = 0;
+											buffer->priv->parts[0].x_padding = arv_uvsp_packet_get_gendc_partpadding_x(buffer->priv->data + partoffset);
+											buffer->priv->parts[0].y_padding = arv_uvsp_packet_get_gendc_partpadding_y(buffer->priv->data + partoffset);
+
+											// current arvuv can accept parts[0] only?
+											ith_component = component_count;
 										}
+										
                                     }
                                 }
                             }
