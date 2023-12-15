@@ -36,6 +36,8 @@
 #include <libusb.h>
 #include <string.h>
 
+#include <chrono>
+
 #define ARV_UV_STREAM_MAXIMUM_TRANSFER_SIZE	(1024*1024*1)
 #define ARV_UV_STREAM_MAXIMUM_SUBMIT_TOTAL	(8*1024*1024)
 
@@ -1087,10 +1089,16 @@ arv_uv_stream_init (ArvUvStream *uv_stream)
 static void
 arv_uv_stream_finalize (GObject *object)
 {
+	auto start = std::chrono::system_clock::now();
 	ArvUvStream *uv_stream = ARV_UV_STREAM (object);
 	ArvUvStreamPrivate *priv = arv_uv_stream_get_instance_private (uv_stream);
+	auto end = std::chrono::system_clock::now();
+	printf("arv_uv_stream_finalize::ArvUvStream/ArvUvStreamPrivate\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
 
+	start = std::chrono::system_clock::now();
 	arv_uv_stream_stop_thread (ARV_STREAM (uv_stream));
+	end = std::chrono::system_clock::now();
+	printf("arv_uv_stream_finalize::arv_uv_stream_stop_thread\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
 
 	if (priv->thread_data != NULL) {
 		ArvUvStreamThreadData *thread_data;
@@ -1111,14 +1119,33 @@ arv_uv_stream_finalize (GObject *object)
 		arv_info_stream ("[UvStream::finalize] n_ignored_bytes        = %" G_GUINT64_FORMAT,
 				  thread_data->statistics.n_ignored_bytes);
 
+		start = std::chrono::system_clock::now();
 		g_mutex_clear (&thread_data->stream_mtx);
-		g_cond_clear (&thread_data->stream_event);
+		end = std::chrono::system_clock::now();
+		printf("arv_uv_stream_finalize::g_mutex_clear (&thread_data->stream_mtx);\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
 
+		start = std::chrono::system_clock::now();
+		g_cond_clear (&thread_data->stream_event);
+		end = std::chrono::system_clock::now();
+		printf("arv_uv_stream_finalize::g_cond_clear (&thread_data->stream_event);\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+
+		start = std::chrono::system_clock::now();
 		g_clear_object (&thread_data->uv_device);
+		end = std::chrono::system_clock::now();
+		printf("arv_uv_stream_finalize::g_clear_object (&thread_data->uv_device);\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+
+		start = std::chrono::system_clock::now();
 		g_clear_pointer (&priv->thread_data, g_free);
+		end = std::chrono::system_clock::now();
+		printf("arv_uv_stream_finalize::g_clear_pointer (&priv->thread_data, g_free);\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+
 	}
 
+	start = std::chrono::system_clock::now();
 	G_OBJECT_CLASS (arv_uv_stream_parent_class)->finalize (object);
+	end = std::chrono::system_clock::now();
+	printf("arv_uv_stream_finalize::G_OBJECT_CLASS (arv_uv_stream_parent_class)->finalize (object);\t%lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+
 }
 
 static void
