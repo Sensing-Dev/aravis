@@ -214,6 +214,7 @@ ARV_API const char **	arv_camera_dup_available_enumerations_as_display_names	(Ar
 										 guint *n_values, GError **error);
 ARV_API gboolean        arv_camera_is_enumeration_entry_available               (ArvCamera *camera, const char *feature,
 										 const char *entry, GError **error);
+ARV_API gint64          arv_camera_enumeration_get_int_value_from_string (ArvCamera *camera, const char *feature, gboolean display_name, const char *value, GError **error);
 
 ARV_API gboolean	arv_camera_is_feature_available			(ArvCamera *camera, const char *feature, GError **error);
 ARV_API gboolean        arv_camera_is_feature_implemented               (ArvCamera *camera, const char *feature, GError **error);

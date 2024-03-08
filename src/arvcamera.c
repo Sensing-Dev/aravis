@@ -3039,6 +3039,29 @@ arv_camera_dup_available_enumerations_as_display_names (ArvCamera *camera, const
 }
 
 /**
+ * arv_camera_enumeration_get_int_value_from_string:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @display_name: true if the enum node has display name
+ * @value: the string value of enum
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Get int value from display names of the entrie of @feature.
+ *
+ * Return value: int value of enum corresponding to the string value or display name of enum
+ */
+
+gint64
+arv_camera_enumeration_get_int_value_from_string (ArvCamera *camera, const char *feature, gboolean display_name, const char *value, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), -1);
+
+	return arv_device_enumeration_get_int_value_from_string (priv->device, feature, display_name, value, error);
+}
+
+/**
  * arv_camera_is_enumeration_entry_available:
  * @camera: a #ArvCamera
  * @feature: enumeration feature name

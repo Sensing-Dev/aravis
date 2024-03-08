@@ -1034,6 +1034,31 @@ arv_device_dup_available_enumeration_feature_values_as_display_names (ArvDevice 
 }
 
 /**
+ * arv_device_enumeration_get_int_value_from_string:
+ * @device: an #ArvDevice
+ * @feature: feature name
+ * @display_name: true if the enum node has display name
+ * @value: the string value of enum
+ * @error: a #GError placeholder
+ *
+ * Get int value from display names of the entrie of @feature.
+ *
+ * Return value: int value of enum corresponding to the string value or display name of enum
+ */
+
+gint64
+arv_device_enumeration_get_int_value_from_string (ArvDevice *device, const char *feature, gboolean display_name, const char *value, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_ENUMERATION, feature, error);
+	if (node != NULL)
+		return arv_gc_enumeration_get_int_value_from_string (ARV_GC_ENUMERATION (node), display_name, value, error);
+
+	return -1;
+}
+
+/**
  * arv_device_is_enumeration_entry_available:
  * @device: an #ArvDevice instance
  * @feature: enumeration feature name

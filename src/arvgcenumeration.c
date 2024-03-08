@@ -199,7 +199,7 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 }
 
 static const char **
-_dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_name ,guint *n_values, GError **error)
+_dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_name, guint *n_values, GError **error)
 {
 	const char ** strings;
 	const GSList *entries, *iter;
@@ -414,6 +414,55 @@ arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, G
                 return FALSE;
 
         return _set_int_value (enumeration, value, error);
+}
+
+/**
+ * arv_gc_enumeration_get_int_value_from_string:
+ * @enumeration: a #ArvGcEnumeration
+ * @display_name: true if the enum node has display name
+ * @value: the string value of enum
+ * @error: (out): the error that occured, or NULL
+ *
+ * Return value: int value of enum corresponding to the string value or display name of enum
+ */
+
+gint64
+arv_gc_enumeration_get_int_value_from_string (ArvGcEnumeration *enumeration, gboolean display_name, const char *value, GError **error)
+{
+	const GSList *iter;
+	GError *local_error = NULL;
+
+	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
+
+	if (enumeration->value == NULL)
+		return 0;
+
+	for (iter = enumeration->entries; iter != NULL; iter = iter->next) {
+		gint64 enum_value = arv_gc_enum_entry_get_value (iter->data, &local_error);
+
+		if (local_error != NULL) {
+					g_propagate_prefixed_error (error, local_error, "[%s] ",
+												arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+					return 0;
+                }
+
+		if (display_name){
+			if (g_strcmp0 (arv_gc_feature_node_get_display_name (iter->data), value) == 0) {
+				return enum_value;
+			}
+		}else{
+			if (g_strcmp0 (arv_gc_feature_node_get_name (iter->data), value) == 0) {
+				return enum_value;
+			}
+		}
+	}
+
+	arv_warning_genicam ("[GcEnumeration::arv_gc_enumeration_get_int_values_from_string] value = %s not found for node %s",
+			     value, arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+
+
+	return 0;
 }
 
 static const char *

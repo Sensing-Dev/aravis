@@ -168,6 +168,7 @@ ARV_API const char **	arv_device_dup_available_enumeration_feature_values_as_dis
 												 guint *n_values, GError **error);
 ARV_API gboolean	arv_device_is_enumeration_entry_available				(ArvDevice *device, const char *feature,
 												 const char *entry, GError **error);
+ARV_API gint64		arv_device_enumeration_get_int_value_from_string (ArvDevice *device, const char *feature, gboolean display_name, const char *value, GError **error);
 
 ARV_API gboolean	arv_device_set_features_from_string	(ArvDevice *device, const char *string, GError **error);
 
