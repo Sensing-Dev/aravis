@@ -2,11 +2,14 @@ name: Aravis-macOS
 
 on:
   push:
-    tags:        
-      - '*'          
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+  workflow_dispatch:
 
 jobs:
-  release-macos:
+  macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
@@ -24,17 +27,14 @@ jobs:
         brew install meson ninja gcc gettext intltool libxml2 libusb gstreamer gnome-icon-theme gobject-introspection glib
     - name: Build
       run: |
-        mkdir build
-        meson setup -Ddocumentation=disabled -Dgst-plugin=enabled -Dusb=enabled -Dviewer=enabled -Dintrospection=enabled  -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}/install build . 
-        meson compile -C ./build
-        meson install -C ./build
+        meson --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled . ./build
+        ninja -C ./build
       env:
         CC: gcc
     - name: Tests
-      run: |
-        export DYLD_LIBRARY_PATH=${{ github.workspace }}/install/lib/:$DYLD_LIBRARY_PATH
-        meson test -C build/ -v
+      run: meson test -C build/ -v
     - uses: actions/upload-artifact@v3
+      if: failure()
       with:
-        name: aravis-${{env.ARAVIS_VER}}-x86-64-macos.tar.gz
-        path: ${{ github.workspace }}/install/*
+        name: MacOS_Meson_Testlog
+        path: build/meson-logs/testlog.txt
