@@ -1,15 +1,15 @@
-name: Aravis-Linux
+name: Release
 
-on:
+on:  
   push:
-    branches: [ main, aravis-0-8 ]
-  pull_request:
-    branches: [ main ]
-  release:
-  workflow_dispatch:
+    tags:
+      - "*"
+
+env:
+  ARAVIS_VER: ${{github.ref_name}}
 
 jobs:
-  linux:
+  release-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -20,10 +20,10 @@ jobs:
         sudo apt install python3 libusb-1.0-0-dev gobject-introspection valgrind libgstreamer-plugins-bad1.0-dev libgtk-3-dev libgirepository1.0-dev python3-gi libunwind-dev gettext
     - name: Build
       run: |
-        meson --buildtype=plain -Ddocumentation=enabled -Dgst-plugin=enabled -Dintrospection=enabled -Dusb=disabled -Dviewer=enabled . ./build
-        ninja -C ./build
-        meson configure -Dusb=enabled build
-        ninja -C ./build
+        mkdir build
+        meson setup -Ddocumentation=disabled -Dgst-plugin=enabled -Dusb=enabled -Dviewer=enabled -Dintrospection=enabled  -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}/install build . 
+        meson compile -C ./build
+        meson install -C ./build
       env:
         CC: gcc
     - name: Tests
@@ -31,21 +31,6 @@ jobs:
     - name: Valgrind
       run: meson test -C build/ -v --setup=valgrind
     - uses: actions/upload-artifact@v3
-      if: failure()
       with:
-        name: Linux_Meson_Testlog
-        path: build/meson-logs/testlog*.txt
-    - name: Development Documentation
-      uses: peaceiris/actions-gh-pages@v3
-      if: ${{ github.ref == 'refs/heads/main' }}
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/docs/reference/aravis/aravis-0.10
-        destination_dir: aravis-main
-    - name: Stable Documentation
-      uses: peaceiris/actions-gh-pages@v3
-      if: ${{ github.ref == 'refs/heads/aravis-0-8' }}
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/docs/reference/aravis/aravis-0.8
-        destination_dir: aravis-stable
+        name: aravis-${{env.ARAVIS_VER}}-x86-64-linux.tar.gz
+        path: ${{ github.workspace }}/install/*
