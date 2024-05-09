@@ -34,17 +34,12 @@ jobs:
       run: meson test -C build/ -v
     - name: Valgrind
       run: meson test -C build/ -v --setup=valgrind
-    - uses: actions/upload-artifact@v3
-      with:
-        name: aravis-${{env.ARAVIS_VER}}-x86-64-linux.tar.gz
-        path: ${{ github.workspace }}/install/*
+
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
             aravis-${{env.ARAVIS_VER}}-x86-64-linux.tar.gz
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-macos:
     runs-on: macos-latest
@@ -75,18 +70,12 @@ jobs:
         run: |
           export DYLD_LIBRARY_PATH=${{ github.workspace }}/install/lib/:$DYLD_LIBRARY_PATH
           meson test -C build/ -v
-      - uses: actions/upload-artifact@v3
-        with:
-          name: aravis-${{env.ARAVIS_VER}}-x86-64-macos.tar.gz
-          path: ${{ github.workspace }}/install/*
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
               aravis-${{env.ARAVIS_VER}}-arm-64-macos.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-windows:
     runs-on: windows-2022
@@ -94,6 +83,7 @@ jobs:
       - name: Disable perl
         run: |
           rm -r C:\Strawberry\perl
+
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -117,6 +107,7 @@ jobs:
       - name: Setup Meson
         run: |
           pip install meson
+
       - name: Setup Ninja
         uses: ahmedyarub/setup-ninja@master
         with:
@@ -143,10 +134,12 @@ jobs:
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg && .\bootstrap-vcpkg.bat  && cd ../
+
       - name: Install dependencies
         shell: cmd
         run: |
           vcpkg.exe install --x-install-root ${{ github.workspace }}\vcpkg_installed
+
       - name: Cache dependencies
         if: steps.cache_status.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
