@@ -64,6 +64,7 @@ def main():
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
         ],
+
         description="Python Binding for aravis",
         package_data={"aravis": package_data},
         install_requires=[],
@@ -75,6 +76,7 @@ def main():
                 "python_tag": "py3",
             },
         },
+        license = "GNU General Public License"
     )
 
 
