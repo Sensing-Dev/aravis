@@ -2,9 +2,9 @@ name: Release
 
 on:
   push:
-    tags:
-      - "*"
-
+    # Pattern matched against refs/tags
+    tags:        
+      - 'v*'
 env:
   ARAVIS_VER: ${{github.ref_name}}
   PKG_CONFIG_INSTALL: C:\pkg-config
@@ -27,7 +27,8 @@ jobs:
         meson setup -Ddocumentation=disabled -Dgst-plugin=enabled -Dusb=enabled -Dviewer=enabled -Dintrospection=disabled  -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}/install build . 
         meson compile -C ./build
         meson install -C ./build
-        cd install && tar -zcvf ../aravis-${{env.ARAVIS_VER}}-x86-64-linux.tar.gz .
+        export tag=${{env.ARAVIS_VER}}
+        cd install && tar -zcvf ../aravis-${tag:1}-x86-64-linux.tar.gz .
       env:
         CC: gcc
     - name: Tests
@@ -39,10 +40,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-            aravis-${{env.ARAVIS_VER}}-x86-64-linux.tar.gz
-
+            aravis*-x86-64-linux.tar.gz
   release-macos:
-    runs-on: macos-latest
+    runs-on: macos-latest-xlarge
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -63,27 +63,25 @@ jobs:
           meson setup -Ddocumentation=disabled -Dgst-plugin=enabled -Dusb=enabled -Dviewer=enabled -Dintrospection=disabled  -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}/install build . 
           meson compile -C ./build
           meson install -C ./build
-          cd install && tar -zcvf ../aravis-${{env.ARAVIS_VER}}-arm-64-macos.tar.gz .
+          export tag=${{env.ARAVIS_VER}}
+          cd install && tar -zcvf ../aravis-${tag:1}-arm-64-macos.tar.gz .
         env:
           CC: gcc
       - name: Tests
         run: |
           export DYLD_LIBRARY_PATH=${{ github.workspace }}/install/lib/:$DYLD_LIBRARY_PATH
           meson test -C build/ -v
-
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-              aravis-${{env.ARAVIS_VER}}-arm-64-macos.tar.gz
-
+              aravis*-arm-64-macos.tar.gz
   release-windows:
     runs-on: windows-latest
     steps:
       - name: Disable perl
         run: |
           rm -r C:\Strawberry\perl
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -107,7 +105,6 @@ jobs:
       - name: Setup Meson
         run: |
           pip install meson
-
       - name: Setup Ninja
         uses: ahmedyarub/setup-ninja@master
         with:
@@ -135,13 +132,11 @@ jobs:
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg && .\bootstrap-vcpkg.bat  && cd ../
-
       - name: Install dependencies
         if: steps.cache_status.outputs.cache-hit != 'true'
         shell: cmd
         run: |
           ${{ github.workspace }}\vcpkg\vcpkg.exe install --x-install-root ${{ github.workspace }}\vcpkg_installed
-
       - name: Cache dependencies
         if: steps.cache_status.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
@@ -160,12 +155,12 @@ jobs:
           meson setup --pkg-config-path ${{ github.workspace }}\vcpkg_installed\x64-windows\lib\pkgconfig -Ddocumentation=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}\install -Dintrospection=disabled build .
           meson compile -C ./build
           meson install -C ./build
-
       - name: Zip directory
         shell: powershell
         run: |
-          Compress-Archive -Path ${{ github.workspace }}\install\* -Destination aravis-${{ github.ref_name }}-x86-64-windows.zip
-
+          $env:tag="${{env.ARAVIS_VER}}"
+          $env:tag=$env:tag.TrimStart("v")
+          Compress-Archive -Path ${{ github.workspace }}\install\* -Destination "aravis-${env:tag}-x86-64-windows.zip"
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
