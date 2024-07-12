@@ -60,7 +60,13 @@ jobs:
           CIBW_SKIP: "*-win32 *i686 *musllinux*"
           CIBW_BUILD: cp311-*
           CIBW_ENVIRONMENT: ARAVIS_VER=${{ github.event.release.tag_name }}
-
+          
+      - name: Test wheel
+        run: |
+          pip install PyGObject
+          pip install aravis-python/wheelhouse/*.whl
+          python3 -c "import aravis"
+          
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-linux
@@ -102,6 +108,13 @@ jobs:
           CIBW_SKIP: "*-win32 *i686 *musllinux*"
           CIBW_BUILD: cp311-*
           CIBW_ENVIRONMENT: ARAVIS_VER=${{ github.event.release.tag_name }}
+
+      - name: Test wheel
+        run: |
+          pip install PyGObject
+          pip install aravis-python/wheelhouse/*.whl
+          python3 -c "import aravis"
+
 
       - uses: actions/upload-artifact@v4
         with:
@@ -204,8 +217,6 @@ jobs:
           ls  aravis-python/aravis/bin/
           ls  aravis-python/aravis/lib/
 
-
-
       - name: Install cibuildwheel
         shell: powershell
         run: python -m pip install cibuildwheel==2.16.4
@@ -248,31 +259,8 @@ jobs:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository-url: https://test.pypi.org/legacy/
 
-  test_TEST_PYPI:
-    needs: [upload_TEST_PYPI]
-    name: Test wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-         os: [ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.11'
-      - name: test
-        run: |
-          sudo apt-get update && sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config
-          pip install pycairo
-          pip install PyGObject
-          sleep 60 # wait package to upload
-          pip install -i https://test.pypi.org/simple/ aravis-python
-          python3 -c "import aravis"
-    
-
+  
   upload_PYPI:
-    needs: [ test_TEST_PYPI ]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
