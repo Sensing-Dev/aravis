@@ -39,11 +39,9 @@ jobs:
           CC: gcc
 
       - name: install dependency
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update && sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config
-          pip install pycairo
-          pip install PyGObject
+      
       - name: Copy linux file
         run: |
           cp  install/lib/x86_64-linux-gnu/libaravis* aravis-python/aravis/lib/
