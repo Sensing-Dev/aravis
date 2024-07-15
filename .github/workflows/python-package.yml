@@ -112,8 +112,6 @@ jobs:
           pip install PyGObject
           pip install aravis-python/wheelhouse/*.whl
           python3 -c "import aravis"
-
-
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-macos
@@ -126,7 +124,6 @@ jobs:
       - name: Disable perl
         run: |
           rm -r C:\Strawberry\perl
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -150,7 +147,6 @@ jobs:
       - name: Setup Meson
         run: |
           pip install meson
-
       - name: Setup Ninja
         uses: ahmedyarub/setup-ninja@master
         with:
@@ -179,13 +175,11 @@ jobs:
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg && .\bootstrap-vcpkg.bat  && cd ../
-
       - name: Install dependencies
         if: steps.cache_status.outputs.cache-hit != 'true'
         shell: cmd
         run: |
           ${{ github.workspace }}\vcpkg\vcpkg.exe install --x-install-root ${{ github.workspace }}\vcpkg_installed
-
       - name: Cache dependencies
         if: steps.cache_status.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
@@ -204,7 +198,6 @@ jobs:
           meson setup --pkg-config-path ${{ github.workspace }}\vcpkg_installed\x64-windows\lib\pkgconfig -Ddocumentation=disabled -Dusb=enabled -Dviewer=disabled -Dgv-n-buffers=1 -Dprefix=${{ github.workspace }}\install -Dintrospection=enabled build .
           meson compile -C ./build
           meson install -C ./build
-
       - name: Copy windows file
         shell: powershell
         run: |
@@ -214,7 +207,6 @@ jobs:
           cp  ${{ github.workspace }}/vcpkg_installed/x64-windows/lib/girepository-1.0/* aravis-python/aravis/lib/
           ls  aravis-python/aravis/bin/
           ls  aravis-python/aravis/lib/
-
       - name: Install cibuildwheel
         shell: powershell
         run: python -m pip install cibuildwheel==2.16.4
@@ -229,6 +221,17 @@ jobs:
           CIBW_BUILD: cp311-*
           CIBW_ENVIRONMENT: ARAVIS_VER=${{ github.event.release.tag_name }}
 
+      - name: Test wheel
+        shell: cmd
+        run: |
+          set PATH=${{env.PKG_CONFIG_INSTALL}}\pkg-config-lite-${{env.PKG_CONFIG_VERSION}}\bin;%PATH%
+          set PATH=${{ github.workspace }}\vcpkg_installed\x64-windows\bin;%PATH%
+          set PKG_CONFIG_PATH=${{ github.workspace }}\vcpkg_installed\x64-windows\lib\pkgconfig\;%PKG_CONFIG_PATH%
+          pip install PyGObject
+          set ARAVIS_VER=${{env.ARAVIS_VER}}
+          set ARAVIS_VER=%ARAVIS_VER:v=%
+          pip install ${{ github.workspace }}\aravis-python\wheelhouse\aravis_python-%ARAVIS_VER%-py3-none-win_amd64.whl
+          python -c "import aravis"
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-windows
