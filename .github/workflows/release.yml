@@ -42,7 +42,7 @@ jobs:
         files: |
             aravis*-x86-64-linux.tar.gz
   release-macos:
-    runs-on: macos-latest-xlarge
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
