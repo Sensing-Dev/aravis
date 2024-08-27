@@ -178,7 +178,7 @@ jobs:
         if: steps.pyg_cache_status.outputs.cache-hit != 'true'
         shell: cmd
         run: |
-          ${{ github.workspace }}\vcpkg\vcpkg.exe install gobject-introspection --x-install-root ${{ github.workspace }}\pygobject\vcpkg_installed
+          cd aravis-python && vcpkg install gobject-introspection --x-install-root ${{ github.workspace }}\pygobject\vcpkg_installed && cd ../
           
       - name: Cache pygobject dependency
         if: steps.pyg_cache_status.outputs.cache-hit != 'true'
