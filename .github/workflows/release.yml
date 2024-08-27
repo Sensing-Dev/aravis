@@ -120,7 +120,7 @@ jobs:
       - name: Release pgobject dependency
         uses: softprops/action-gh-release@v1
         with:
-          files: pygobject-dependencie.zip
+          files: pygobject-dependencies.zip
     
     
   release-windows:
