@@ -123,7 +123,7 @@ jobs:
       run: |
         meson test -C .\build
     - name: logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: msvc_${{ matrix.version }}_${{ matrix.arch }}_${{ matrix.build_type_meson }}_Meson_Testlog
